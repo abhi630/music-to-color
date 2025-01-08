@@ -1,3 +1,11 @@
+import {
+    generateHarmoniousPalette,
+    generateAccessiblePalette,
+    checkPaletteAccessibility,
+    suggestHarmonyType,
+    improveColorAccessibility
+} from './colorTheory';
+
 /**
  * Map all features to a combined color following the mapping:
  * - Tempo -> Base hue (speed/energy)
@@ -72,28 +80,60 @@ function adjustColorWithContext(baseColor, key, mood) {
         }
     }
     
-    // 5. Apply mood modifications with more dramatic effects
+    // 5. Apply mood modifications with cultural awareness
     if (mood) {
-        // Energetic/Happy moods: much more vibrant
-        if (mood.energy > 0.7) {
-            s = Math.min(100, s * 1.3);
-            l = Math.min(90, l * 1.2);
-            h = weightedAverage(h, 60, 0.7, 0.3); // Shift towards yellow
+        // Get cultural color influences
+        const culturalColors = mood.cultural;
+        if (culturalColors) {
+            // Blend with genre-specific colors
+            const genreColor = culturalColors.genre.primary;
+            h = weightedAverage(h, genreColor.h, 0.7, 0.3);
+            s = weightedAverage(s, genreColor.s, 0.7, 0.3);
+            l = weightedAverage(l, genreColor.l, 0.7, 0.3);
+
+            // Blend with cultural mood colors
+            const westernColor = culturalColors.western;
+            const easternColor = culturalColors.eastern;
+            if (westernColor && easternColor) {
+                // Create a balanced blend of cultural influences
+                const culturalH = weightedAverage(westernColor.h, easternColor.h, 0.6, 0.4);
+                const culturalS = weightedAverage(westernColor.s, easternColor.s, 0.6, 0.4);
+                const culturalL = weightedAverage(westernColor.l, easternColor.l, 0.6, 0.4);
+                
+                h = weightedAverage(h, culturalH, 0.7, 0.3);
+                s = weightedAverage(s, culturalS, 0.7, 0.3);
+                l = weightedAverage(l, culturalL, 0.7, 0.3);
+            }
+        } else {
+            // Fallback to traditional mood mapping
+            if (mood.energy > 0.7) {
+                s = Math.min(100, s * 1.3);
+                l = Math.min(90, l * 1.2);
+                h = weightedAverage(h, 60, 0.7, 0.3); // Shift towards yellow
+            } else if (mood.energy < 0.3) {
+                s = Math.max(30, s * 0.7);
+                l = Math.max(30, l * 0.8);
+                h = weightedAverage(h, 240, 0.7, 0.3); // Shift towards blue
+            }
+            
+            if (mood.valence > 0.7) {
+                h = weightedAverage(h, 45, 0.7, 0.3); // Shift towards orange-yellow
+                s = Math.min(100, s * 1.2);
+            } else if (mood.valence < 0.3) {
+                h = weightedAverage(h, 270, 0.7, 0.3); // Shift towards purple
+                s = Math.max(30, s * 0.8);
+            }
         }
-        // Melancholic/Sad moods: more muted and cool
-        else if (mood.energy < 0.3) {
-            s = Math.max(30, s * 0.7);
-            l = Math.max(30, l * 0.8);
-            h = weightedAverage(h, 240, 0.7, 0.3); // Shift towards blue
+
+        // Apply arousal and dominance influences
+        if (mood.arousal > 0.7) {
+            s = Math.min(100, s * 1.2); // More saturated for high arousal
+            l = Math.min(90, l * 1.1); // Brighter for high arousal
         }
         
-        // Adjust based on valence (emotional positivity)
-        if (mood.valence > 0.7) {
-            h = weightedAverage(h, 45, 0.7, 0.3); // Shift towards orange-yellow
-            s = Math.min(100, s * 1.2);
-        } else if (mood.valence < 0.3) {
-            h = weightedAverage(h, 270, 0.7, 0.3); // Shift towards purple
-            s = Math.max(30, s * 0.8);
+        if (mood.dominance > 0.7) {
+            s = Math.min(100, s * 1.15); // More saturated for high dominance
+            l = Math.max(30, l * 0.9); // Slightly darker for high dominance
         }
     }
     
@@ -101,28 +141,75 @@ function adjustColorWithContext(baseColor, key, mood) {
 }
 
 function createDynamicGradient(baseColor, timbre, key, mood) {
-    const { complexity } = timbre;
+    const { complexity, variation, brightness, roughness, warmth } = timbre;
     const hslMatch = baseColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
     const [h, s, l] = hslMatch.slice(1).map(Number);
     
-    // 6. Create texture based on timbre
-    const normalizedComplexity = Math.min(1, Math.max(0, complexity));
+    // Calculate gradient properties based on timbre features
     const angle = Math.round(((key?.root || 0) * 30 + (mood?.energy || 0.5) * 180) % 360);
     
-    // Simple timbre: minimal color variation
-    // Complex timbre: more color stops and variation
-    if (normalizedComplexity < 0.3) {
-        // Simple timbre: subtle gradient
-        return `linear-gradient(${angle}deg, 
-            hsl(${h}, ${s}%, ${l}%), 
-            hsl(${(h + 10) % 360}, ${s}%, ${Math.min(80, l + 10)}%))`;
+    // Adjust color variations based on timbre characteristics
+    const colorStops = [];
+    
+    // Base color
+    colorStops.push(`hsl(${h}, ${s}%, ${l}%)`);
+    
+    // Brightness affects the lightness range
+    const brightnessFactor = Math.max(0.3, brightness);
+    const lightnessRange = 30 * brightnessFactor;
+    
+    // Warmth affects the hue shift direction and saturation
+    const warmthFactor = Math.max(0.3, warmth);
+    const hueShift = warmth > 0.5 ? 30 : -30;
+    const saturationBoost = warmth > 0.5 ? 10 : -10;
+    
+    // Roughness affects the contrast between colors
+    const roughnessFactor = Math.max(0.3, roughness);
+    const contrastLevel = 20 * roughnessFactor;
+    
+    // Complexity determines the number of color stops
+    if (complexity < 0.3) {
+        // Simple, subtle gradient
+        colorStops.push(
+            `hsl(${h}, ${s}%, ${Math.min(90, l + lightnessRange * 0.5)}%)`
+        );
+    } else if (complexity < 0.7) {
+        // Moderate complexity
+        colorStops.push(
+            `hsl(${(h + hueShift) % 360}, ${Math.min(100, s + saturationBoost)}%, ${Math.min(90, l + lightnessRange)}%)`,
+            `hsl(${(h - hueShift + 360) % 360}, ${Math.max(20, s - saturationBoost)}%, ${Math.max(10, l - lightnessRange)}%)`
+        );
     } else {
-        // Complex timbre: more varied gradient
-        return `linear-gradient(${angle}deg, 
-            hsl(${h}, ${s}%, ${l}%),
-            hsl(${(h + 30) % 360}, ${Math.min(100, s + 10)}%, ${Math.min(80, l + 10)}%),
-            hsl(${(h + 60) % 360}, ${Math.max(20, s - 10)}%, ${Math.max(20, l - 10)}%))`;
+        // High complexity
+        colorStops.push(
+            `hsl(${(h + hueShift) % 360}, ${Math.min(100, s + saturationBoost)}%, ${Math.min(90, l + lightnessRange)}%)`,
+            `hsl(${(h + hueShift * 2) % 360}, ${Math.min(100, s + saturationBoost * 1.5)}%, ${l}%)`,
+            `hsl(${(h - hueShift + 360) % 360}, ${Math.max(20, s - saturationBoost)}%, ${Math.max(10, l - lightnessRange)}%)`
+        );
     }
+    
+    // Variation affects the gradient type and pattern
+    const gradientType = variation > 0.7 ? 'radial' : 'linear';
+    const gradientPattern = variation > 0.5 ? 
+        `${gradientType}-gradient(${angle}deg, ${colorStops.join(', ')})` :
+        `linear-gradient(${angle}deg, ${colorStops.join(', ')})`;
+    
+    // Add texture based on roughness
+    if (roughness > 0.6) {
+        return `
+            background: ${gradientPattern};
+            background-blend-mode: overlay;
+            background-size: 100% 100%, 50px 50px;
+            background-image: ${gradientPattern},
+                repeating-linear-gradient(${angle + 45}deg,
+                    rgba(255,255,255,${0.1 * roughnessFactor}) 0px,
+                    transparent ${contrastLevel}px,
+                    rgba(0,0,0,${0.1 * roughnessFactor}) ${contrastLevel * 2}px
+                )
+        `;
+    }
+    
+    return gradientPattern;
 }
 
 // Helper function
@@ -135,15 +222,24 @@ function weightedAverage(val1, val2, weight1, weight2) {
  */
 export const generateColorPalette = (bpm, pitch, rms, timbre, key, mood) => {
     const baseColor = mapFeaturesToColor(bpm, pitch, rms, timbre, key, mood);
-    const hslMatch = baseColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-    const [h, s, l] = hslMatch.slice(1).map(Number);
     
-    return [
-        baseColor,
-        `hsl(${(h + 30) % 360}, ${Math.min(100, s + 10)}%, ${Math.min(90, l + 10)}%)`,
-        `hsl(${(h + 60) % 360}, ${s}%, ${l}%)`,
-        `hsl(${(h + 180) % 360}, ${Math.max(30, s - 10)}%, ${Math.max(30, l - 10)}%)`,
-        `hsl(${(h + 210) % 360}, ${Math.min(100, s + 20)}%, ${l}%)`
-    ];
+    // Determine harmony type based on mood
+    const harmonyType = suggestHarmonyType(mood);
+    
+    // Generate harmonious palette
+    const harmonicPalette = generateHarmoniousPalette(baseColor, harmonyType);
+    
+    // Check and improve accessibility against background color
+    const backgroundColor = 'hsl(0, 0%, 100%)'; // White background
+    const accessibilityResults = checkPaletteAccessibility(harmonicPalette, backgroundColor);
+    
+    // Improve colors that don't meet accessibility requirements
+    const accessiblePalette = accessibilityResults.map(result => 
+        result.improvementNeeded ? 
+            improveColorAccessibility(result.color, backgroundColor) : 
+            result.color
+    );
+    
+    return accessiblePalette;
 };
   
