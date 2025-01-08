@@ -6,6 +6,11 @@ import {
     improveColorAccessibility
 } from './colorTheory';
 
+import {
+    generateEnhancedPalette,
+    optimizePalette
+} from './enhancedColorTheory';
+
 /**
  * Map all features to a combined color following the mapping:
  * - Tempo -> Base hue (speed/energy)
@@ -223,15 +228,15 @@ function weightedAverage(val1, val2, weight1, weight2) {
 export const generateColorPalette = (bpm, pitch, rms, timbre, key, mood) => {
     const baseColor = mapFeaturesToColor(bpm, pitch, rms, timbre, key, mood);
     
-    // Determine harmony type based on mood
-    const harmonyType = suggestHarmonyType(mood);
+    // Generate initial palette using enhanced color theory
+    const enhancedPalette = generateEnhancedPalette(baseColor, mood, timbre);
     
-    // Generate harmonious palette
-    const harmonicPalette = generateHarmoniousPalette(baseColor, harmonyType);
+    // Optimize the palette for distinction
+    const optimizedPalette = optimizePalette(enhancedPalette, mood, timbre);
     
     // Check and improve accessibility against background color
     const backgroundColor = 'hsl(0, 0%, 100%)'; // White background
-    const accessibilityResults = checkPaletteAccessibility(harmonicPalette, backgroundColor);
+    const accessibilityResults = checkPaletteAccessibility(optimizedPalette, backgroundColor);
     
     // Improve colors that don't meet accessibility requirements
     const accessiblePalette = accessibilityResults.map(result => 
