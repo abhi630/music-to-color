@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/music-to-color/static/css/main.228d4f4e.css",
-    "main.js": "/music-to-color/static/js/main.5b774327.js",
+    "main.js": "/music-to-color/static/js/main.148ffe2c.js",
     "static/js/488.f8f31cd3.chunk.js": "/music-to-color/static/js/488.f8f31cd3.chunk.js",
     "index.html": "/music-to-color/index.html",
     "main.228d4f4e.css.map": "/music-to-color/static/css/main.228d4f4e.css.map",
-    "main.5b774327.js.map": "/music-to-color/static/js/main.5b774327.js.map",
+    "main.148ffe2c.js.map": "/music-to-color/static/js/main.148ffe2c.js.map",
     "488.f8f31cd3.chunk.js.map": "/music-to-color/static/js/488.f8f31cd3.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.228d4f4e.css",
-    "static/js/main.5b774327.js"
+    "static/js/main.148ffe2c.js"
   ]
 }
