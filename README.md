@@ -36,6 +36,18 @@ A React-based web application that analyzes audio files and generates correspond
 - Web Audio API for audio processing
 - Meyda.js for audio feature extraction
 
+## Privacy & Legal
+
+- **Audio Files**: 
+  - Users should only upload audio files they have rights to use
+  - No audio files are stored on our servers
+  - All processing is done client-side in the browser
+  - We do not collect or store any user data
+
+- **Libraries & Dependencies**:
+  - All libraries and frameworks used are open-source with MIT licenses
+  - No proprietary code or assets are included
+
 ## Getting Started
 
 To run this project locally:
