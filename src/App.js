@@ -12,7 +12,7 @@ import ColorVisualizer from './components/ColorVisualizer';
 import ColorExplanation from './components/ColorExplanation';
 import BrandStoryVisualizer from './components/BrandStoryVisualizer';
 import { loadAudioFile, extractBasicFeatures, extractTempo, extractRms, extractPitch, extractTimbre, extractKey, extractMood } from './utils/audioProcessing';
-import { mapFeaturesToColor, mapTempoToColor, mapPitchToColor, mapLoudnessToColor, mapKeyToColor, mapMoodToColor, generateColorPalette } from './utils/colorMapping';
+import { mapFeaturesToColor, generateColorPalette } from './utils/colorMapping';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import '@mantine/dropzone/styles.css';
@@ -102,21 +102,6 @@ function App() {
       const key = extractKey(audioBuffer);
       const mood = extractMood(tempo, rms, key, timbre);
 
-      console.log('Extracted Audio Features:', {
-        fileName: file.name,
-        tempo,
-        rms,
-        pitch,
-        timbre,
-        key,
-        mood
-      });
-
-      const tempoColor = mapTempoToColor(tempo);
-      const pitchColor = mapPitchToColor(pitch);
-      const loudnessColor = mapLoudnessToColor(rms);
-      const keyColor = mapKeyToColor(key);
-      const moodColor = mapMoodToColor(mood);
       const combinedColor = mapFeaturesToColor(tempo, pitch, rms, timbre, key, mood);
       const palette = generateColorPalette(tempo, pitch, rms, timbre, key, mood);
 
@@ -130,11 +115,6 @@ function App() {
         key,
         mood,
         colors: {
-          tempo: tempoColor,
-          pitch: pitchColor,
-          loudness: loudnessColor,
-          key: keyColor,
-          mood: moodColor,
           combined: combinedColor,
           palette
         }
