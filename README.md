@@ -1,70 +1,69 @@
-# Getting Started with Create React App
+# Music Color Analyzer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React-based web application that analyzes audio files and generates corresponding colors and visual representations based on various musical features.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Audio Analysis**: Upload and analyze audio files to extract musical features like:
+  - Tempo (BPM)
+  - Pitch
+  - Loudness (RMS)
+  - Timbre
+  - Musical Key
+  - Mood
 
-### `npm start`
+- **Color Generation**:
+  - Converts musical features into meaningful colors
+  - Generates color palettes based on audio characteristics
+  - Provides visual explanations for color choices
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Brand Story Visualization**:
+  - Translates audio features into brand identity elements
+  - Creates visual representations of the music's emotional qualities
+  - Suggests color schemes for branding purposes
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## How It Works
 
-### `npm test`
+1. **Audio Upload**: Users can drag and drop or select an audio file
+2. **Feature Extraction**: The app analyzes the audio file to extract musical features
+3. **Color Mapping**: Musical features are mapped to colors using carefully designed algorithms
+4. **Visualization**: Results are displayed through various interactive visualizations
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Technical Stack
 
-### `npm run build`
+- React.js for the frontend
+- Mantine UI for components and styling
+- Web Audio API for audio processing
+- Meyda.js for audio feature extraction
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Getting Started
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+To run this project locally:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+# Clone the repository
+git clone https://github.com/abhi630/music-to-color.git
 
-### `npm run eject`
+# Navigate to project directory
+cd music-to-color
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Install dependencies
+npm install
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Start the development server
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Visit `http://localhost:3000` to view the app in your browser.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Live Demo
 
-## Learn More
+The application is deployed at: https://abhi630.github.io/music-to-color/
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Contributing
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Code Splitting
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License - see the LICENSE file for details.
