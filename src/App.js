@@ -7,36 +7,76 @@ import IconX from '@tabler/icons-react/dist/esm/icons/IconX';
 import IconCheck from '@tabler/icons-react/dist/esm/icons/IconCheck';
 import IconAlertCircle from '@tabler/icons-react/dist/esm/icons/IconAlertCircle';
 import IconMusic from '@tabler/icons-react/dist/esm/icons/IconMusic';
-import Navigation from './components/Navigation';
 import ColorVisualizer from './components/ColorVisualizer';
 import ColorExplanation from './components/ColorExplanation';
-import BrandStoryVisualizer from './components/BrandStoryVisualizer';
 import { loadAudioFile, extractBasicFeatures, extractTempo, extractRms, extractPitch, extractTimbre, extractKey, extractMood } from './utils/audioProcessing';
-import { mapFeaturesToColor, generateColorPalette } from './utils/colorMapping';
+import { mapFeaturesToColor, mapTempoToColor, mapPitchToColor, mapLoudnessToColor, mapKeyToColor, mapMoodToColor, generateColorPalette } from './utils/colorMapping';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import '@mantine/dropzone/styles.css';
 
+const Header = () => (
+  <Paper
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 100,
+      background: 'rgba(255, 255, 255, 0.98)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      borderBottom: '1px solid rgba(88, 28, 135, 0.1)',
+      boxShadow: '0 4px 30px rgba(0, 0, 0, 0.03)',
+    }}
+  >
+    <Container size="lg">
+      <Group py="md">
+        <Title
+          order={2}
+          style={{ 
+            background: 'linear-gradient(135deg, #4C1D95 0%, #7C3AED 50%, #8B5CF6 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontSize: '1.8rem',
+          }}
+        >
+          Harmony Hues
+        </Title>
+      </Group>
+    </Container>
+  </Paper>
+);
+
 const theme = createTheme({
-  fontFamily: 'Inter, sans-serif',
+  fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
   headings: {
-    fontFamily: 'Inter, sans-serif',
-    fontWeight: '700',
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+    fontWeight: '600',
   },
   components: {
-    Tabs: {
+    Container: {
+      defaultProps: {
+        size: 'lg',
+      },
+    },
+    Paper: {
+      defaultProps: {
+        shadow: 'sm',
+        radius: 'md',
+      },
       styles: {
-        tab: {
-          '&:hover': {
-            backgroundColor: '#EEF2FF !important',
-            color: '#581C87 !important',
-            transform: 'scale(1.05)',
-          },
-          '&[data-active]': {
-            backgroundColor: '#581C87 !important',
-            color: 'white !important',
-            transform: 'scale(1.05)',
-          },
+        root: {
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+        },
+      },
+    },
+    Title: {
+      styles: {
+        root: {
+          letterSpacing: '-0.01em',
         },
       },
     },
@@ -83,7 +123,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [activeTab, setActiveTab] = useState('upload');
 
   const handleFileUpload = async (files) => {
     const file = files[0];
@@ -102,6 +141,21 @@ function App() {
       const key = extractKey(audioBuffer);
       const mood = extractMood(tempo, rms, key, timbre);
 
+      console.log('Extracted Audio Features:', {
+        fileName: file.name,
+        tempo,
+        rms,
+        pitch,
+        timbre,
+        key,
+        mood
+      });
+
+      const tempoColor = mapTempoToColor(tempo);
+      const pitchColor = mapPitchToColor(pitch);
+      const loudnessColor = mapLoudnessToColor(rms);
+      const keyColor = mapKeyToColor(key);
+      const moodColor = mapMoodToColor(mood);
       const combinedColor = mapFeaturesToColor(tempo, pitch, rms, timbre, key, mood);
       const palette = generateColorPalette(tempo, pitch, rms, timbre, key, mood);
 
@@ -115,6 +169,11 @@ function App() {
         key,
         mood,
         colors: {
+          tempo: tempoColor,
+          pitch: pitchColor,
+          loudness: loudnessColor,
+          key: keyColor,
+          mood: moodColor,
           combined: combinedColor,
           palette
         }
@@ -141,173 +200,170 @@ function App() {
   };
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'upload':
-        return (
-          <Stack spacing="xl">
-            <Paper
-              radius="lg"
-              p="xs"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderColor: isDragging ? 'rgba(255,255,255,0.5)' : 'rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                maxWidth: '600px',
-                margin: '0 auto',
-              }}
-            >
-              <Dropzone
-                onDrop={handleFileUpload}
-                onDragEnter={() => setIsDragging(true)}
-                onDragLeave={() => setIsDragging(false)}
-                accept={['audio/*']}
-                loading={false}
-                p="md"
-                radius="lg"
-                style={{
-                  border: `2px dashed ${isDragging ? 'rgba(255,255,255,0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
-                  background: isDragging ? 'rgba(255,255,255,0.1)' : 'transparent',
-                }}
-              >
-                <Group position="center" spacing="xl" style={{ minHeight: 80, pointerEvents: 'none' }}>
-                  {isLoading ? (
-                    <WaveformLoader />
-                  ) : (
-                    <>
-                      <div>
-                        {isDragging ? (
-                          <IconMusic size="2.5rem" stroke={1.5} style={{ color: 'rgba(255,255,255,0.9)' }} />
-                        ) : (
-                          <IconUpload size="2.5rem" stroke={1.5} style={{ color: 'rgba(255,255,255,0.9)' }} />
-                        )}
-                      </div>
-                      <div>
-                        <Text size="lg" inline style={{ 
-                          color: '#fff',
-                          fontWeight: 600,
-                          letterSpacing: '0.02em',
-                        }}>
-                          {isDragging ? 'Drop your audio file here' : 'Drag an audio file here or click to select'}
-                        </Text>
-                        <Text size="xs" style={{ color: 'rgba(255,255,255,0.7)' }} inline mt={7}>
-                          Upload any audio file to analyze its features
-                        </Text>
-                      </div>
-                    </>
-                  )}
-                </Group>
-              </Dropzone>
-            </Paper>
+    return (
+      <Stack spacing="xl" style={{ width: '100%' }}>
+        <Stack spacing="sm" align="center" mb="xl">
+          <Title 
+            order={1} 
+            style={{ 
+              fontSize: '2.5rem',
+              background: 'linear-gradient(135deg, #4C1D95 0%, #7C3AED 50%, #8B5CF6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              textShadow: '0 2px 10px rgba(124, 58, 237, 0.1)',
+            }}
+          >
+            Turn your music into color palette
+          </Title>
+          <Text 
+            size="xl" 
+            style={{ 
+              background: 'linear-gradient(135deg, #6D28D9 0%, #7C3AED 50%, #A78BFA 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 500,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Inspired by Tempo, Pitch, Loudness, and Mood
+          </Text>
+        </Stack>
 
-            {error && (
-              <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red" radius="md" style={{
-                backgroundColor: 'rgba(225, 29, 72, 0.1)',
-                borderColor: 'rgba(225, 29, 72, 0.2)',
-              }}>
-                {error}
-              </Alert>
-            )}
+        <Paper
+          radius="lg"
+          p="md"
+          style={{
+            width: '100%',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%)',
+            border: isDragging 
+              ? '2px dashed #7C3AED'
+              : '2px dashed rgba(124, 58, 237, 0.3)',
+            transition: 'all 0.2s ease',
+            boxShadow: isDragging 
+              ? '0 8px 30px rgba(124, 58, 237, 0.15)'
+              : '0 4px 20px rgba(0, 0, 0, 0.05)',
+          }}
+        >
+          <Dropzone
+            onDrop={handleFileUpload}
+            onDragEnter={() => setIsDragging(true)}
+            onDragLeave={() => setIsDragging(false)}
+            accept={['audio/*']}
+            loading={isLoading}
+            p="xl"
+            style={{
+              border: 'none',
+              background: 'transparent',
+              transition: 'transform 0.2s ease',
+              transform: isDragging ? 'scale(0.99)' : 'scale(1)',
+            }}
+          >
+            <Group position="center" spacing="xl">
+              {isLoading ? (
+                <WaveformLoader />
+              ) : (
+                <>
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: isDragging 
+                      ? 'linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%)'
+                      : 'rgba(124, 58, 237, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease',
+                    boxShadow: isDragging 
+                      ? '0 4px 12px rgba(124, 58, 237, 0.2)'
+                      : 'none',
+                  }}>
+                    {isDragging ? (
+                      <IconMusic 
+                        size="1.8rem" 
+                        style={{ color: '#fff' }}
+                      />
+                    ) : (
+                      <IconUpload 
+                        size="1.8rem" 
+                        style={{ color: '#7C3AED' }}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <Text size="lg" weight={500} style={{ 
+                      color: isDragging ? '#4C1D95' : '#1a1b1e',
+                      transition: 'color 0.2s ease',
+                    }}>
+                      {isDragging ? 'Drop to analyze' : 'Upload your audio'}
+                    </Text>
+                    <Text size="sm" c="dimmed" mt={7}>
+                      Drag and drop or click to select a file
+                    </Text>
+                  </div>
+                </>
+              )}
+            </Group>
+          </Dropzone>
+        </Paper>
 
-            {audioFeatures && (
-              <>
-                {/* Color Analysis */}
-                <Paper p="md" radius="md" withBorder style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                }}>
-                  <Stack spacing="xl">
-                    <ColorVisualizer audioFeatures={audioFeatures} />
-                    <ColorExplanation audioFeatures={audioFeatures} />
-                  </Stack>
-                </Paper>
+        {error && (
+          <Alert 
+            icon={<IconAlertCircle size="1rem" />} 
+            title="Error" 
+            color="red" 
+            radius="md"
+            variant="light"
+          >
+            {error}
+          </Alert>
+        )}
 
-                {/* Audio Analysis */}
-                <Paper p="md" radius="md" withBorder style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                }}>
-                  <Stack spacing="sm">
-                    <Title order={3}>Audio Analysis Details</Title>
-                    <Group grow>
-                      <Stack spacing="xs">
-                        <Text weight={700}>Basic Features</Text>
-                        <Text size="sm">Duration: {audioFeatures.duration.toFixed(2)}s</Text>
-                        <Text size="sm">Sample Rate: {audioFeatures.sampleRate} Hz</Text>
-                        <Text size="sm">Channels: {audioFeatures.channelCount}</Text>
-                      </Stack>
-                      
-                      <Stack spacing="xs">
-                        <Text weight={700}>Musical Features</Text>
-                        <Text size="sm">Tempo: {audioFeatures.tempo.toFixed(1)} BPM</Text>
-                        {audioFeatures.pitch && (
-                          <Text size="sm">Pitch: {audioFeatures.pitch.toFixed(1)} Hz</Text>
-                        )}
-                        <Text size="sm">Loudness (RMS): {audioFeatures.rms.toFixed(3)}</Text>
-                        {audioFeatures.key && (
-                          <Text size="sm">Key: {audioFeatures.key.rootNote} {audioFeatures.key.scale}</Text>
-                        )}
-                      </Stack>
-                    </Group>
-                  </Stack>
-                </Paper>
-              </>
-            )}
-          </Stack>
-        );
-      case 'brand':
-        return audioFeatures ? (
-          <Paper p="md" radius="md" withBorder style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        {audioFeatures && (
+          <Paper p={0} radius="lg" style={{ 
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)',
+            backdropFilter: 'blur(10px)',
+            marginTop: '1rem',
           }}>
-            <BrandStoryVisualizer audioFeatures={audioFeatures} />
+            <Group align="stretch" spacing={0} noWrap>
+              <div style={{ 
+                flex: 2.5, 
+                padding: '24px',
+                display: 'flex',
+                alignItems: 'center',
+              }}>
+                <ColorVisualizer colors={audioFeatures.colors.palette} />
+              </div>
+              <div style={{ 
+                width: '320px',
+                borderLeft: '1px solid rgba(88, 28, 135, 0.1)',
+                padding: '24px',
+                background: 'rgba(255, 255, 255, 0.5)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}>
+                <ColorExplanation audioFeatures={audioFeatures} />
+              </div>
+            </Group>
           </Paper>
-        ) : (
-          <Text style={{ color: 'white', textAlign: 'center' }}>Please upload an audio file first</Text>
-        );
-      default:
-        return null;
-    }
+        )}
+      </Stack>
+    );
   };
 
   return (
     <MantineProvider theme={theme}>
-      <div style={{
-        background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #581C87 100%)',
+      <Header />
+      <Container py="xl" style={{ 
         minHeight: '100vh',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '1rem',
+        marginTop: '80px',
       }}>
-        <Notifications position="top-right" />
-        <Container size="xl" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            <Title order={1} style={{ 
-              fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
-              background: 'linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              marginBottom: '0.5rem',
-              lineHeight: 1.2,
-            }}>
-              Audio Color Analyzer
-            </Title>
-            <Text size="md" style={{ color: 'rgba(255,255,255,0.8)', letterSpacing: '0.02em', maxWidth: '600px', margin: '0 auto' }}>
-              Upload an audio file to analyze its features and generate corresponding colors
-            </Text>
-          </div>
-
-          <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-          
-          <div style={{ 
-            maxWidth: '800px',
-            margin: '0 auto',
-            width: '100%',
-          }}>
-            {renderContent()}
-          </div>
-        </Container>
-      </div>
+        {renderContent()}
+      </Container>
+      <Notifications position="top-right" zIndex={200} />
     </MantineProvider>
   );
 }

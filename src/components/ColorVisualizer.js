@@ -1,69 +1,95 @@
 import React from 'react';
-import { Tooltip, CopyButton } from '@mantine/core';
+import { Paper, Tooltip, ActionIcon, Group, CopyButton } from '@mantine/core';
+import { IconCopy, IconCheck } from '@tabler/icons-react';
 
-const PianoKey = ({ color, index }) => {
-  const isBlackKey = [1, 3, 6, 8, 10].includes(index % 12);
-
+const ColorVisualizer = ({ colors }) => {
   return (
-    <CopyButton value={color} timeout={2000}>
-      {({ copied, copy }) => (
-        <Tooltip
-          label={copied ? "Copied!" : color}
-          position="top"
-          withArrow
-        >
-          <div style={{
-            position: 'relative',
-            height: isBlackKey ? '120px' : '180px',
-            flex: 1,
-            minWidth: '60px',
-            cursor: 'pointer',
-            transition: 'transform 0.1s ease',
-          }}>
-            {/* Key */}
-            <div 
-              onClick={copy}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: '2px',
-                right: '2px',
-                bottom: 0,
-                background: color,
-                borderRadius: '0 0 6px 6px',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                border: '1px solid rgba(0,0,0,0.1)',
-                transform: copied ? 'translateY(2px)' : 'none',
-              }} 
-            />
+    <Group align="center" spacing={32} noWrap style={{ width: '100%' }}>
+      {/* Main color display */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        height: '240px',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+      }}>
+        {colors.map((color, index) => (
+          <div
+            key={index}
+            style={{
+              flex: 1,
+              backgroundColor: color,
+              transition: 'all 0.3s ease',
+              position: 'relative',
+              cursor: 'pointer',
+              '&:hover': {
+                flex: 1.5,
+              },
+            }}
+          >
+            <CopyButton value={color} timeout={2000}>
+              {({ copied, copy }) => (
+                <Tooltip label={copied ? 'Copied!' : color.toUpperCase()} position="top" withArrow>
+                  <ActionIcon
+                    variant="filled"
+                    onClick={copy}
+                    style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      right: '12px',
+                      backgroundColor: 'rgba(255,255,255,0.9)',
+                      backdropFilter: 'blur(4px)',
+                      opacity: 0,
+                      transition: 'opacity 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,1)',
+                      },
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '0';
+                    }}
+                  >
+                    {copied ? <IconCheck size="1rem" /> : <IconCopy size="1rem" />}
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </CopyButton>
           </div>
-        </Tooltip>
-      )}
-    </CopyButton>
-  );
-};
+        ))}
+      </div>
 
-const ColorVisualizer = ({ audioFeatures }) => {
-  if (!audioFeatures?.colors?.palette) return null;
-
-  return (
-    <div style={{
-      display: 'flex',
-      gap: '0',
-      justifyContent: 'center',
-      padding: '1rem',
-      background: 'linear-gradient(to bottom, #f0f0f0, #e0e0e0)',
-      borderRadius: '8px',
-      boxShadow: 'inset 0 -4px 12px rgba(0,0,0,0.1)',
-    }}>
-      {audioFeatures.colors.palette.map((color, index) => (
-        <PianoKey 
-          key={index} 
-          color={color} 
-          index={index}
-        />
-      ))}
-    </div>
+      {/* Color circles */}
+      <Group spacing={12}>
+        {colors.map((color, index) => (
+          <Tooltip 
+            key={index} 
+            label={color.toUpperCase()} 
+            position="top" 
+            withArrow
+          >
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: color,
+                boxShadow: '0 4px 8px rgba(0,0,0,0.08)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
+                },
+              }}
+            />
+          </Tooltip>
+        ))}
+      </Group>
+    </Group>
   );
 };
 

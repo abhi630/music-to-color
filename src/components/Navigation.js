@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from '@mantine/core';
-import { IconUpload, IconPalette } from '@tabler/icons-react';
+import { IconUpload } from '@tabler/icons-react';
 
 const Navigation = ({ activeTab, onTabChange }) => {
   return (
@@ -70,12 +70,6 @@ const Navigation = ({ activeTab, onTabChange }) => {
           leftSection={<IconUpload size="1rem" />}
         >
           Audio Analysis
-        </Tabs.Tab>
-        <Tabs.Tab
-          value="brand"
-          leftSection={<IconPalette size="1rem" />}
-        >
-          Brand Story
         </Tabs.Tab>
       </Tabs.List>
     </Tabs>

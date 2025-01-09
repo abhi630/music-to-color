@@ -1,106 +1,70 @@
-# Music Color Analyzer
+# Getting Started with Create React App
 
-A React-based web application that analyzes audio files and generates corresponding colors and visual representations based on musical features. The app creates meaningful color palettes that reflect the audio's characteristics while ensuring accessibility and visual harmony.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Features
+## Available Scripts
 
-### Audio Analysis
-- **Tempo Detection**: Analyzes BPM (40-200 range)
-- **Pitch Analysis**: Extracts fundamental frequency
-- **Loudness Measurement**: Calculates RMS (Root Mean Square) amplitude
-- **Timbre Analysis**: Extracts spectral features including:
-  - Complexity
-  - Brightness
-  - Warmth
-  - Roughness
-- **Key Detection**: Identifies musical key and scale
-- **Mood Analysis**: Advanced analysis including:
-  - Energy levels
-  - Valence (emotional positivity)
-  - Arousal (emotional intensity)
-  - Dominance
-  - Genre detection
+In the project directory, you can run:
 
-### Color Generation
+### `npm start`
 
-#### Base Color Mapping
-- **Tempo → Hue**: Maps speed to color temperature
-  - Slow (40-80 BPM): Cool colors (Blue to Purple)
-  - Medium (80-120 BPM): Warm colors (Purple to Orange)
-  - Fast (120-200 BPM): Hot colors (Orange to Red)
-- **Pitch → Saturation**: Higher pitches increase color saturation (30-100%)
-- **Loudness → Brightness**: Higher amplitude creates brighter colors (30-90%)
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-#### Genre-Based Color Associations
-- **Classical**: Purple (sophistication) + Beige (tradition)
-- **Jazz**: Deep Blue (night) + Orange (improvisation)
-- **Rock**: Deep Red (energy) + Dark Gray (edge)
-- **Electronic**: Cyan (futuristic) + Magenta (digital)
-- **Folk**: Earth Brown (nature) + Forest Green (pastoral)
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-#### Accessibility Features
-- WCAG compliance checking
-- Contrast ratio calculations
-- Automatic color adjustments for accessibility
-- High-contrast alternatives
+### `npm test`
 
-### Visual Representations
-- **Piano Key Visualization**: Interactive color display
-- **Brand Story Visualization**: 
-  - Typography system with light/dark themes
-  - Brand applications (logo, patterns)
-  - Musical cityscape
-  - Record collection
-  - Musical library
-  - Musical parking lot
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-## Technical Stack
-- **Frontend**: React.js
-- **UI Components**: Mantine UI (@mantine/core, @mantine/dropzone, @mantine/hooks, @mantine/notifications)
-- **Icons**: Tabler Icons (@tabler/icons-react)
-- **Audio Processing**: Meyda.js
-- **Deployment**: GitHub Pages
+### `npm run build`
 
-## Getting Started
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/abhi630/music-to-color.git
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-# Navigate to project directory
-cd music-to-color
+### `npm run eject`
 
-# Install dependencies
-npm install
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-# Start the development server
-npm start
-```
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Visit `http://localhost:3000` to view the app in your browser.
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-## Usage
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-1. **Upload Audio**:
-   - Drag and drop or click to select an audio file
-   - Supported formats: MP3, WAV, OGG
+## Learn More
 
-2. **View Results**:
-   - Color palette generation
-   - Visual representations
-   - Detailed audio analysis
-   - Accessibility metrics
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-## Live Demo
-Visit the live application at: https://abhi630.github.io/music-to-color/
+To learn React, check out the [React documentation](https://reactjs.org/).
 
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+### Code Splitting
 
-## License
-This project is licensed under the MIT License.
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+
+### Analyzing the Bundle Size
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+
+### Making a Progressive Web App
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+
+### Advanced Configuration
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+
+### Deployment
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+
+### `npm run build` fails to minify
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

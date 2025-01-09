@@ -326,51 +326,41 @@ export const loadAudioFile = async (file) => {
     const channelData = audioBuffer.getChannelData(0);
     const sampleRate = audioBuffer.sampleRate;
     const fftSize = 2048;
-    const hopSize = fftSize / 4;
-    const segmentFeatures = [];
-
-    // Analyze multiple segments for temporal variation
-    for (let i = 0; i < channelData.length - fftSize; i += hopSize) {
-        const segment = channelData.slice(i, i + fftSize);
-        const windowedSegment = applyWindow(segment);
-        const features = analyzeSegment(windowedSegment, sampleRate, fftSize);
-        segmentFeatures.push(features);
+    
+    // Analyze multiple segments for temporal evolution
+    const segmentSize = Math.min(sampleRate * 3, channelData.length); // 3-second segments
+    const hopSize = Math.floor(segmentSize / 2); // 50% overlap
+    const segments = [];
+    
+    // Collect segments with overlap
+    for (let i = 0; i < channelData.length - segmentSize; i += hopSize) {
+        segments.push(channelData.slice(i, i + segmentSize));
     }
-
-    // Aggregate features across segments
-    const timbreFeatures = aggregateTimbreFeatures(segmentFeatures, sampleRate);
-
-    // Calculate additional high-level features
-    const complexity = calculateTimbreComplexity(timbreFeatures);
-    const variation = calculateTemporalVariation(segmentFeatures);
-    const brightness = timbreFeatures.spectralCentroid / (sampleRate / 4);
-    const roughness = calculateRoughness(timbreFeatures);
-    const warmth = calculateWarmth(timbreFeatures);
-
-    return {
-        complexity,      // Overall timbral complexity (0-1)
-        variation,       // How much the timbre changes over time (0-1)
-        brightness,      // Spectral brightness/sharpness (0-1)
-        roughness,       // Timbral roughness/harshness (0-1)
-        warmth,         // Timbral warmth (presence of lower harmonics) (0-1)
-        features: timbreFeatures  // Detailed spectral features
-    };
+    
+    // Analyze each segment
+    const segmentFeatures = segments.map(segment => analyzeSegment(segment, sampleRate, fftSize));
+    
+    // Pass sampleRate to aggregateTimbreFeatures
+    return aggregateTimbreFeatures(segmentFeatures, sampleRate);
   };
 
   function analyzeSegment(segment, sampleRate, fftSize) {
+    // Apply window function
+    const windowedSignal = applyWindow(segment, 'hanning');
+    
     // Calculate basic spectral features
-    const spectralFeatures = calculateSpectralFeatures(segment, sampleRate, fftSize);
+    const spectralFeatures = calculateSpectralFeatures(windowedSignal, sampleRate, fftSize);
     
-    // Calculate harmonic features
-    const harmonicFeatures = calculateHarmonicFeatures(segment, sampleRate, fftSize);
+    // Calculate MFCCs
+    const mfccs = calculateEnhancedMFCCs(windowedSignal, sampleRate, fftSize);
     
-    // Calculate enhanced MFCCs for timbral texture
-    const mfccs = calculateEnhancedMFCCs(segment, sampleRate, fftSize);
+    // Calculate additional features
+    const harmonicFeatures = calculateHarmonicFeatures(windowedSignal, sampleRate, fftSize);
     
     return {
         ...spectralFeatures,
-        ...harmonicFeatures,
-        mfccs
+        mfccs,
+        ...harmonicFeatures
     };
   }
 
@@ -378,40 +368,24 @@ export const loadAudioFile = async (file) => {
     const magnitudes = calculateMagnitudeSpectrum(signal, fftSize);
     const frequencies = createFrequencyArray(fftSize, sampleRate);
     
+    // Spectral centroid (brightness)
     const centroid = calculateSpectralCentroid(magnitudes, frequencies);
+    
+    // Spectral spread (bandwidth)
     const spread = calculateSpectralSpread(magnitudes, frequencies, centroid);
+    
+    // Spectral flatness (noisiness vs. tonality)
     const flatness = calculateSpectralFlatness(magnitudes);
+    
+    // Spectral rolloff (distribution of energy)
     const rolloff = calculateSpectralRolloff(magnitudes, frequencies);
-    const peaks = analyzeSpectralPeaks(signal, sampleRate, fftSize);
     
     return {
         spectralCentroid: centroid,
         spectralSpread: spread,
         spectralFlatness: flatness,
-        spectralRolloff: rolloff,
-        spectralPeaks: peaks
+        spectralRolloff: rolloff
     };
-  }
-
-  function calculateRoughness(features) {
-    // Calculate roughness based on peak spacing and prominence
-    const peakSpacing = calculatePeakSpacing(features.spectralPeaks);
-    const peakProminence = calculatePeakProminence(features.spectralPeaks, features.magnitudes);
-    
-    // Normalize and combine factors
-    const normalizedSpacing = 1 - Math.min(1, peakSpacing / 100);
-    const normalizedProminence = Math.min(1, peakProminence / 0.5);
-    
-    return (normalizedSpacing * 0.6 + normalizedProminence * 0.4);
-  }
-
-  function calculateWarmth(features) {
-    // Calculate warmth based on low-frequency energy and harmonic content
-    const lowFreqEnergy = features.spectralRolloff / (features.sampleRate / 2);
-    const harmonicBalance = features.harmonicRatio;
-    
-    // Combine factors with weights
-    return Math.min(1, (1 - lowFreqEnergy) * 0.7 + harmonicBalance * 0.3);
   }
 
   function calculateHarmonicFeatures(signal, sampleRate, fftSize) {
@@ -632,23 +606,24 @@ export const loadAudioFile = async (file) => {
    * @returns {Object} - Mood characteristics
    */
   export const extractMood = (tempo, rms, key, timbre) => {
-    // Use ML-based mood classification
-    const mlMood = classifyMoodML({ tempo, rms, key, timbre });
-
-    // Combine with traditional energy-valence calculation for backward compatibility
+    // Energy calculation (based on tempo and loudness)
     const normalizedTempo = Math.min(Math.max((tempo - 40) / (200 - 40), 0), 1);
     const normalizedLoudness = Math.min(rms * 2, 1);
     const energy = (normalizedTempo * 0.6 + normalizedLoudness * 0.4);
 
+    // Valence calculation (based on key and timbre)
+    const isMinor = key.scale === 'minor';
+    const harmonicFactor = timbre.harmonicContent;
+    const valence = calculateValence(isMinor, harmonicFactor, key.confidence);
+
+    // Mood classification
+    const mood = classifyMood(energy, valence);
+
     return {
-        energy,              // 0 to 1 (low to high energy)
-        valence: mlMood.valence,     // 0 to 1 (negative to positive)
-        arousal: mlMood.arousal,     // 0 to 1 (calm to excited)
-        dominance: mlMood.dominance, // 0 to 1 (submissive to dominant)
-        primary: mlMood.emotional,   // Primary emotional state
-        genre: mlMood.genre,         // Detected genre
-        intensity: (mlMood.arousal + mlMood.valence) / 2, // Overall mood intensity
-        cultural: mlMood.culturalColors  // Cultural color associations
+        energy,        // 0 to 1 (low to high energy)
+        valence,       // 0 to 1 (negative to positive)
+        primary: mood, // Primary mood category
+        intensity: (energy + valence) / 2 // Overall mood intensity
     };
   };
 
@@ -706,7 +681,7 @@ export const loadAudioFile = async (file) => {
     return magnitudes;
   }
 
-  function createFrequencyArray(fftSize, sampleRate) {
+  export function createFrequencyArray(fftSize, sampleRate) {
     const frequencies = new Float32Array(fftSize/2);
     for (let i = 0; i < fftSize/2; i++) {
         frequencies[i] = (i * sampleRate) / fftSize;
@@ -714,7 +689,7 @@ export const loadAudioFile = async (file) => {
     return frequencies;
   }
 
-  function calculateSpectralCentroid(magnitudes, frequencies) {
+  export function calculateSpectralCentroid(magnitudes, frequencies) {
     let numerator = 0;
     let denominator = 0;
     
@@ -726,7 +701,7 @@ export const loadAudioFile = async (file) => {
     return denominator !== 0 ? numerator / denominator : 0;
   }
 
-  function calculateSpectralSpread(magnitudes, frequencies, centroid) {
+  export function calculateSpectralSpread(magnitudes, frequencies, centroid) {
     let numerator = 0;
     let denominator = 0;
     
@@ -738,7 +713,7 @@ export const loadAudioFile = async (file) => {
     return denominator !== 0 ? Math.sqrt(numerator / denominator) : 0;
   }
 
-  function calculateSpectralFlatness(magnitudes) {
+  export function calculateSpectralFlatness(magnitudes) {
     let geometricMean = 0;
     let arithmeticMean = 0;
     const epsilon = 1e-6;
@@ -754,7 +729,7 @@ export const loadAudioFile = async (file) => {
     return arithmeticMean !== 0 ? geometricMean / arithmeticMean : 0;
   }
 
-  function calculateSpectralRolloff(magnitudes, frequencies, percentile = 0.85) {
+  export function calculateSpectralRolloff(magnitudes, frequencies, percentile = 0.85) {
     const totalEnergy = magnitudes.reduce((sum, mag) => sum + mag, 0);
     let energySum = 0;
     
@@ -768,25 +743,7 @@ export const loadAudioFile = async (file) => {
     return frequencies[frequencies.length - 1];
   }
 
-  function calculateEnhancedMFCCs(signal, sampleRate, fftSize) {
-    const numCoefficients = 13;
-    const melFilters = createMelFilterbank(fftSize/2, sampleRate, numCoefficients);
-    const spectrum = calculateMagnitudeSpectrum(signal, fftSize);
-    
-    // Apply mel filterbank
-    const melEnergies = new Float32Array(numCoefficients);
-    for (let i = 0; i < numCoefficients; i++) {
-        let sum = 0;
-        for (let j = 0; j < fftSize/2; j++) {
-            sum += spectrum[j] * melFilters[i][j];
-        }
-        melEnergies[i] = Math.log(sum + 1e-6);
-    }
-    
-    return melEnergies;
-  }
-
-  function calculateEnhancedHarmonicRatio(signal, sampleRate, fftSize) {
+  export function calculateEnhancedHarmonicRatio(signal, sampleRate, fftSize) {
     const spectrum = calculateMagnitudeSpectrum(signal, fftSize);
     let harmonicEnergy = 0;
     let totalEnergy = 0;
@@ -804,7 +761,7 @@ export const loadAudioFile = async (file) => {
     return totalEnergy > 0 ? harmonicEnergy / totalEnergy : 0;
   }
 
-  function calculateInharmonicity(signal, sampleRate, fftSize) {
+  export function calculateInharmonicity(signal, sampleRate, fftSize) {
     const spectrum = calculateMagnitudeSpectrum(signal, fftSize);
     let inharmonicity = 0;
     let totalEnergy = 0;
@@ -819,7 +776,7 @@ export const loadAudioFile = async (file) => {
     return totalEnergy > 0 ? inharmonicity / totalEnergy : 0;
   }
 
-  function analyzeSpectralPeaks(signal, sampleRate, fftSize) {
+  export function analyzeSpectralPeaks(signal, sampleRate, fftSize) {
     const spectrum = calculateMagnitudeSpectrum(signal, fftSize);
     const peaks = findSpectralPeaks(spectrum);
     
@@ -830,7 +787,7 @@ export const loadAudioFile = async (file) => {
     };
   }
 
-  function averageArrays(arrays) {
+  export function averageArrays(arrays) {
     if (!arrays.length) return [];
     const length = arrays[0].length;
     const result = new Float32Array(length);
@@ -846,16 +803,7 @@ export const loadAudioFile = async (file) => {
     return result;
   }
 
-  function calculateTimbreComplexity(features) {
-    // Combine multiple features to estimate overall complexity
-    const spectralComplexity = features.spectralSpread.std / features.spectralSpread.mean;
-    const harmonicComplexity = 1 - features.harmonicContent.mean;
-    const temporalComplexity = features.spectralCentroid.std / features.spectralCentroid.mean;
-    
-    return (spectralComplexity + harmonicComplexity + temporalComplexity) / 3;
-  }
-
-  function calculateTemporalVariation(features) {
+  export function calculateTemporalVariation(features) {
     // Calculate how much timbre varies over time
     const variations = [];
     for (const feature in features) {
@@ -931,6 +879,33 @@ export const loadAudioFile = async (file) => {
     }
     
     return totalProminence / peaks.length;
+  }
+
+  function calculateEnhancedMFCCs(signal, sampleRate, fftSize) {
+    const numCoefficients = 13;
+    const melFilters = createMelFilterbank(fftSize/2, sampleRate, numCoefficients);
+    const spectrum = calculateMagnitudeSpectrum(signal, fftSize);
+    
+    // Apply mel filterbank
+    const melEnergies = new Float32Array(numCoefficients);
+    for (let i = 0; i < numCoefficients; i++) {
+        let sum = 0;
+        for (let j = 0; j < fftSize/2; j++) {
+            sum += spectrum[j] * melFilters[i][j];
+        }
+        melEnergies[i] = Math.log(sum + 1e-6);
+    }
+    
+    return melEnergies;
+  }
+
+  function calculateTimbreComplexity(features) {
+    // Combine multiple features to estimate overall complexity
+    const spectralComplexity = features.spectralSpread.std / features.spectralSpread.mean;
+    const harmonicComplexity = 1 - features.harmonicContent.mean;
+    const temporalComplexity = features.spectralCentroid.std / features.spectralCentroid.mean;
+    
+    return (spectralComplexity + harmonicComplexity + temporalComplexity) / 3;
   }
   
   
